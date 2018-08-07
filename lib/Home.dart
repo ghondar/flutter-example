@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'dart:async';
 
 import './Ico.dart';
 
@@ -20,25 +19,36 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   final url = Uri.https('api.coinmarketcap.com', 'v1/ticker');
   final httpClient = HttpClient();
-  List<Ico> _icos;
+  String _state = 'New';
+  List<Ico> _icos = new List<Ico>();
 
-  Future<List<Ico>> _getIPAddress() async {
-    var request = await httpClient.getUrl(url);
-    var response = await request.close();
-    var responseBody = await response.transform(utf8.decoder).join();
-    List items = json.decode(responseBody);
-    _icos = new List<Ico>();
-    for (var item in items) {
-      Ico ico = Ico.fromJson(item);
-      _icos.add(ico);
+  _getIcos() async {
+    try {
+      setState(() {
+        _state = 'Loading';
+      });
+      var request = await httpClient.getUrl(url);
+      var response = await request.close();
+      var responseBody = await response.transform(utf8.decoder).join();
+      List items = json.decode(responseBody);
+      List<Ico> icos = new List<Ico>();
+      for (var item in items) {
+        Ico ico = Ico.fromJson(item);
+        icos.add(ico);
+      }
+      setState(() {
+        _icos = icos;
+        _state = 'Done';
+      });
+    } catch (e) {
+      print(e.toString());
     }
-    return _icos;
   }
 
   @override
@@ -49,37 +59,32 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return new Scaffold(
-      appBar: new AppBar(
+    return Scaffold(
+      appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: new Text(widget.title),
+        title: Text(widget.title),
       ),
-      body: new Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
-          child: new FutureBuilder<List<Ico>>(
-        future: _getIPAddress(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          print(snapshot.hasData);
-          if (snapshot.hasData) {
-            if (snapshot.data != null) {
-              return new ListView(
-                  children: snapshot.data
-                      .map<Widget>((ico) => new ListTile(
-                            title: new Text(ico.name),
-                            subtitle: new Text(ico.priceUsd),
-                          ))
-                      .toList());
-            }
-          } else if (snapshot.hasError) {
-            return Text("${snapshot.error}");
-          }
-
-          // By default, show a loading spinner
-          return CircularProgressIndicator();
-        },
-      )),
+      body: Center(
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
+        child: _state == 'New'
+            ? Text('Vacio')
+            : _state == 'Loading'
+                ? CircularProgressIndicator()
+                : ListView(
+                    children: _icos
+                        .map<Widget>((ico) => ListTile(
+                              title: Text(ico.name),
+                              subtitle: Text(ico.priceUsd),
+                            ))
+                        .toList(),
+                  ),
+      ),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: _getIcos,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
