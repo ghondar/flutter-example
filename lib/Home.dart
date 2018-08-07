@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 
 import './Ico.dart';
+import './Icos.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -25,26 +26,25 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final url = Uri.https('api.coinmarketcap.com', 'v1/ticker');
   final httpClient = HttpClient();
-  String _state = 'New';
-  List<Ico> _icos = new List<Ico>();
+  Icos _icos = new Icos(new List<Ico>(), 'New');
 
   _getIcos() async {
     try {
       setState(() {
-        _state = 'Loading';
+        _icos.changeState('Loading');
       });
       var request = await httpClient.getUrl(url);
       var response = await request.close();
       var responseBody = await response.transform(utf8.decoder).join();
       List items = json.decode(responseBody);
-      List<Ico> icos = new List<Ico>();
       for (var item in items) {
         Ico ico = Ico.fromJson(item);
-        icos.add(ico);
+        setState(() {
+          _icos.addCoin(ico);
+        });
       }
       setState(() {
-        _icos = icos;
-        _state = 'Done';
+        _icos.changeState('Done');
       });
     } catch (e) {
       print(e.toString());
@@ -53,35 +53,38 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: _state == 'New'
-            ? Text('Vacio')
-            : _state == 'Loading'
+        child: _icos.state == 'New'
+            ? Text('Vacio...')
+            : _icos.state == 'Loading'
                 ? CircularProgressIndicator()
-                : ListView(
-                    children: _icos
-                        .map<Widget>((ico) => ListTile(
-                              title: Text(ico.name),
-                              subtitle: Text(ico.priceUsd),
-                            ))
-                        .toList(),
+                : Scrollbar(
+                    child: CustomScrollView(
+                      shrinkWrap: true,
+                      slivers: <Widget>[
+                        SliverPadding(
+                          padding: EdgeInsets.all(20.0),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate(
+                              _icos.icos
+                                  .map<Widget>((ico) => ListTile(
+                                        leading: Icon(Icons.flight_land),
+                                        title: Text(ico.name),
+                                        subtitle: Text(ico.priceUsd),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
                   ),
       ),
-      floatingActionButton: new FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: _getIcos,
         child: const Icon(Icons.add),
       ),
