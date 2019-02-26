@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 
 import './Ico.dart';
 import './Icos.dart';
@@ -27,6 +28,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final url = Uri.https('api.coinmarketcap.com', 'v1/ticker');
   final httpClient = HttpClient();
   Icos _icos = new Icos(new List<Ico>(), 'New');
+  var timer;
 
   _getIcos() async {
     try {
@@ -48,6 +50,20 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     } catch (e) {
       print(e.toString());
+    }
+  }
+
+  _initInterval() {
+    if (timer == null) {
+      _getIcos();
+      timer = Timer.periodic(new Duration(seconds: 10), (timer) {
+        _getIcos();
+      });
+    } else {
+      timer.cancel();
+      setState(() {
+        timer = null;
+      });
     }
   }
 
@@ -85,8 +101,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _getIcos,
-        child: const Icon(Icons.add),
+        onPressed: _initInterval,
+        child: Icon(timer == null ? Icons.play_arrow : Icons.stop),
       ),
     );
   }
