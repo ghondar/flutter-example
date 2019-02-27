@@ -8,9 +8,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Crypto Price',
       theme: new ThemeData.dark(),
-      home: new MyHomePage(title: 'Ico Price List'),
+      home: new MyHomePage(title: 'Crypto Price'),
     );
   }
 }
