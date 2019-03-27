@@ -22,17 +22,15 @@ class _IcoState extends State<Icos> {
   IcoBloc _icoBloc;
   var timer;
 
-  _initInterval() {
-    if (timer == null) {
+  _initInterval(bool loop) {
+    if (loop == false) {
       _icoBloc.dispatch(FetchIco());
       timer = Timer.periodic(new Duration(seconds: 10), (timer) {
         _icoBloc.dispatch(FetchIco());
       });
     } else {
       timer.cancel();
-      setState(() {
-        timer = null;
-      });
+      _icoBloc.dispatch(StopFetchIco());
     }
   }
 
@@ -40,14 +38,13 @@ class _IcoState extends State<Icos> {
   void initState() {
     super.initState();
     _icoBloc = IcoBloc(icoRepository: widget.icoRepository);
-    _icoBloc.dispatch(FetchIco());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Algo'),
+        title: Text('Cryto Currency'),
       ),
       body: Center(
         child: BlocBuilder(
@@ -85,9 +82,14 @@ class _IcoState extends State<Icos> {
           }
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _initInterval,
-        child: Icon(timer == null ? Icons.play_arrow : Icons.stop),
+      floatingActionButton: BlocBuilder(
+        bloc: _icoBloc,
+        builder: (_, IcoState state) {
+          return FloatingActionButton(
+                  onPressed: () { _initInterval(state.loop); },
+                  child: Icon(state.loop == false ? Icons.play_arrow : Icons.stop),
+                );
+        }
       ),
     );
   }

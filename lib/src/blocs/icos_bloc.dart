@@ -12,20 +12,32 @@ abstract class IcoEvent extends Equatable {
 class FetchIco extends IcoEvent {
 }
 
-abstract class IcoState extends Equatable {
-  IcoState([List props = const []]) : super(props);
+class StopFetchIco extends IcoEvent {
 }
 
-class IcoEmpty extends IcoState {}
+abstract class IcoState extends Equatable {
+  final bool loop = false;
+  IcoState([List props = const [], bool loop = false]) : super(props);
+}
 
-class IcoLoading extends IcoState {}
+class IcoEmpty extends IcoState {
+  final bool loop = false;
+}
+
+class IcoLoading extends IcoState {
+  final bool loop;
+  IcoLoading({@required this.loop})
+    : assert(loop != null),
+      super([loop]);
+}
 
 class IcoLoaded extends IcoState {
   final List<Ico> icos;
+  final bool loop;
 
-  IcoLoaded({@required this.icos})
-      : assert(icos != null),
-        super([icos]);
+  IcoLoaded({@required this.icos, @required this.loop})
+      : assert(icos != null, loop != null),
+        super([icos, loop]);
 }
 
 class IcoError extends IcoState {}
@@ -45,13 +57,15 @@ class IcoBloc extends Bloc<IcoEvent, IcoState> {
     IcoEvent event,
   ) async* {
     if (event is FetchIco) {
-      yield IcoLoading();
+      yield IcoLoading(loop: true);
       try {
         final List<Ico> icos = await icoRepository.getIco();
-        yield IcoLoaded(icos: icos);
+        yield IcoLoaded(icos: icos, loop: true);
       } catch (_) {
         yield IcoError();
       }
+    } if(event is StopFetchIco) {
+      yield IcoLoaded(icos: currentState.props[0], loop: false);
     }
   }
 }
