@@ -7,10 +7,6 @@ import 'package:flutterexample/src/widgets/widgets.dart';
 import 'package:flutterexample/src/repositories/repositories.dart';
 
 class SimpleBlocDelegate extends BlocDelegate {
-  @override
-  onTransition(Transition transition) {
-    print(transition);
-  }
 
   @override
   void onError(Object error, StackTrace stacktrace) {

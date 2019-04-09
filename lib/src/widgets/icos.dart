@@ -24,9 +24,9 @@ class _IcoState extends State<Icos> {
 
   _initInterval(bool loop) {
     if (loop == false) {
-      _icoBloc.dispatch(FetchIco());
-      timer = Timer.periodic(new Duration(seconds: 10), (timer) {
-        _icoBloc.dispatch(FetchIco());
+      _icoBloc.dispatch(FetchIco(1));
+      timer = Timer.periodic(new Duration(seconds: 100), (timer) {
+        _icoBloc.dispatch(FetchIco(1));
       });
     } else {
       timer.cancel();
@@ -46,41 +46,19 @@ class _IcoState extends State<Icos> {
       appBar: AppBar(
         title: Text('Cryto Currency'),
       ),
-      body: Center(
-        child: BlocBuilder(
-          bloc: _icoBloc,
-          builder: (_, IcoState state) {
-            if (state is IcoEmpty) {
-              return Center(child: Text('Vacio...'));
-            }
-            if (state is IcoLoading) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (state is IcoLoaded) {
-              return Scrollbar(
-                child: CustomScrollView(
-                  shrinkWrap: true,
-                  slivers: <Widget>[
-                    SliverPadding(
-                      padding: EdgeInsets.all(20.0),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate(
-                          state.icos
-                              .map<Widget>((ico) => ListTile(
-                                    leading: Icon(Icons.flight_land),
-                                    title: Text(ico.name),
-                                    subtitle: Text(ico.priceUsd),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              );
-            }
+      body: BlocBuilder(
+        bloc: _icoBloc,
+        builder: (_, IcoState state) {
+          if (state is IcoEmpty) {
+            return Center(child: Text('Vacio...'));
           }
-        ),
+          if (state is IcoLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (state is IcoLoaded) {
+            return buildList(state);
+          }
+        }
       ),
       floatingActionButton: BlocBuilder(
         bloc: _icoBloc,
@@ -94,7 +72,27 @@ class _IcoState extends State<Icos> {
     );
   }
 
-
+  Widget buildList(IcoLoaded state) {
+    return GridView.builder(
+      itemCount: state.icos.length,
+      gridDelegate:
+        SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+      itemBuilder: (BuildContext context, int index) {
+        if(index + 1 == state.icos.length) {
+          _icoBloc.dispatch(FetchIco(state.icos.length ~/ 10 + 1));
+        } else {
+          return Padding(
+            padding: EdgeInsets.all(5.0),
+            child: ListTile(
+              leading: Icon(Icons.flight_land),
+              title: Text(state.icos[index].name),
+              subtitle: Text(state.icos[index].priceUsd.toString()),
+            )
+          );
+        }
+      },
+    );
+  }
 
   @override
   void dispose() {

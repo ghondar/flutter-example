@@ -9,7 +9,7 @@ class IcoRepository {
   IcoRepository({@required this.icoApiClient})
       : assert(icoApiClient != null);
 
-  Future<List<Ico>> getIco() async {
-    return icoApiClient.fetchIco();
+  Future<List<Ico>> getIco(int page) async {
+    return icoApiClient.fetchIco(page);
   }
 }

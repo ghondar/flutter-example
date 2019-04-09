@@ -10,6 +10,8 @@ abstract class IcoEvent extends Equatable {
 }
 
 class FetchIco extends IcoEvent {
+  int page;
+  FetchIco(this.page);
 }
 
 class StopFetchIco extends IcoEvent {
@@ -57,10 +59,10 @@ class IcoBloc extends Bloc<IcoEvent, IcoState> {
     IcoEvent event,
   ) async* {
     if (event is FetchIco) {
-      yield IcoLoading(loop: true);
       try {
-        final List<Ico> icos = await icoRepository.getIco();
-        yield IcoLoaded(icos: icos, loop: true);
+        final List<Ico> icos = await icoRepository.getIco(event.page);
+        List<Ico> newList = []..addAll(currentState.props.length > 0 ? currentState.props[0] : [])..addAll(icos);
+        yield IcoLoaded(icos: newList, loop: true);
       } catch (_) {
         yield IcoError();
       }
