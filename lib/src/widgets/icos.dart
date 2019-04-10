@@ -52,10 +52,7 @@ class _IcoState extends State<Icos> {
           if (state is IcoEmpty) {
             return Center(child: Text('Vacio...'));
           }
-          if (state is IcoLoading) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (state is IcoLoaded) {
+          if (state is IcoLoaded || state is IcoLoading) {
             return buildList(state);
           }
         }
@@ -72,25 +69,35 @@ class _IcoState extends State<Icos> {
     );
   }
 
-  Widget buildList(IcoLoaded state) {
-    return GridView.builder(
-      itemCount: state.icos.length,
-      gridDelegate:
-        SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-      itemBuilder: (BuildContext context, int index) {
-        if(index + 1 == state.icos.length) {
-          _icoBloc.dispatch(FetchIco(state.icos.length ~/ 10 + 1));
-        } else {
-          return Padding(
-            padding: EdgeInsets.all(5.0),
-            child: ListTile(
-              leading: Icon(Icons.flight_land),
-              title: Text(state.icos[index].name),
-              subtitle: Text(state.icos[index].priceUsd.toString()),
-            )
-          );
-        }
-      },
+  bool notNull(Object o) => o != null;
+
+  Widget buildList(IcoState state) {
+    var columns = <Widget>[
+        state is IcoLoaded ? GridView.builder(
+          itemCount: state.icos.length,
+          gridDelegate:
+            SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+          itemBuilder: (BuildContext context, int index) {
+            if(index + 1 == state.icos.length) {
+              _icoBloc.dispatch(FetchIco(state.icos.length ~/ 10 + 1));
+            } else {
+              return Padding(
+                padding: EdgeInsets.all(5.0),
+                child: ListTile(
+                  leading: Icon(Icons.flight_land),
+                  title: Text(state.icos[index].name),
+                  subtitle: Text(state.icos[index].priceUsd.toString()),
+                )
+              );
+            }
+          },
+        ) : null,
+        state is IcoLoading ? Center(child: CircularProgressIndicator()) : null
+      ].where(notNull).toList();
+    
+    print(columns);
+    return Column(
+      children: columns,
     );
   }
 
