@@ -25,7 +25,7 @@ class _IcoState extends State<Icos> {
   _initInterval(bool loop) {
     if (loop == false) {
       _icoBloc.dispatch(FetchIco(1));
-      timer = Timer.periodic(new Duration(seconds: 100), (timer) {
+      timer = Timer.periodic(new Duration(seconds: 10), (timer) {
         _icoBloc.dispatch(FetchIco(1));
       });
     } else {
@@ -52,7 +52,7 @@ class _IcoState extends State<Icos> {
           if (state is IcoEmpty) {
             return Center(child: Text('Vacio...'));
           }
-          if (state is IcoLoaded || state is IcoLoading) {
+          if (state is IcoLoaded) {
             return buildList(state);
           }
         }
@@ -71,33 +71,38 @@ class _IcoState extends State<Icos> {
 
   bool notNull(Object o) => o != null;
 
-  Widget buildList(IcoState state) {
-    var columns = <Widget>[
-        state is IcoLoaded ? GridView.builder(
-          itemCount: state.icos.length,
-          gridDelegate:
-            SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-          itemBuilder: (BuildContext context, int index) {
-            if(index + 1 == state.icos.length) {
-              _icoBloc.dispatch(FetchIco(state.icos.length ~/ 10 + 1));
-            } else {
-              return Padding(
-                padding: EdgeInsets.all(5.0),
-                child: ListTile(
-                  leading: Icon(Icons.flight_land),
-                  title: Text(state.icos[index].name),
-                  subtitle: Text(state.icos[index].priceUsd.toString()),
-                )
-              );
-            }
-          },
-        ) : null,
-        state is IcoLoading ? Center(child: CircularProgressIndicator()) : null
-      ].where(notNull).toList();
-    
-    print(columns);
-    return Column(
-      children: columns,
+  Widget buildList(IcoLoaded state) {
+    return ListView.builder(
+      itemBuilder: (BuildContext context, int index) {
+        if(index < state.icos.length) {
+          return Padding(
+            padding: EdgeInsets.all(5.0),
+            child: ListTile(
+              leading: Icon(Icons.flight_land),
+              title: Text(state.icos[index].name),
+              subtitle: Text(state.icos[index].priceUsd.toString()),
+            )
+          );
+        }
+        if(index == state.icos.length) {
+          _icoBloc.dispatch(FetchIco(state.icos.length ~/ 10 + 1));
+          return defaultLoading();
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget defaultLoading() {
+    return Align(
+      child: SizedBox(
+        height: 40,
+        width: 40,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: CircularProgressIndicator(),
+        ),
+      ),
     );
   }
 

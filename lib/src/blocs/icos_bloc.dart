@@ -59,7 +59,7 @@ class IcoBloc extends Bloc<IcoEvent, IcoState> {
     IcoEvent event,
   ) async* {
     if (event is FetchIco) {
-      yield IcoLoading(loop: true);
+      yield IcoLoaded(icos: currentState.props.length > 0 ? currentState.props[0] : [],loop: true);
       try {
         final List<Ico> icos = await icoRepository.getIco(event.page);
         List<Ico> newList = []..addAll(currentState.props.length > 0 ? currentState.props[0] : [])..addAll(icos);

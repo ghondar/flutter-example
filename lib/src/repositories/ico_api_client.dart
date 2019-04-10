@@ -14,7 +14,6 @@ class IcoApiClient {
 
   Future<List<Ico>> fetchIco(int page) async {
     final icoUrl = '$baseUrl/v1/cryptocurrency/listings/latest?limit=10&start=${(page - 1) * 10 + 1}';
-    print(icoUrl);
     final icoResponse = await this.httpClient.get(icoUrl, headers: { 'X-CMC_PRO_API_KEY': token});
 
     if (icoResponse.statusCode != 200) {
